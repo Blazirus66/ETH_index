@@ -1,0 +1,62 @@
+package main
+
+import (
+	"database/sql"
+	"io/ioutil"
+	"log"
+	"net/http"
+
+	_ "github.com/lib/pq"
+)
+
+type Transaction struct {
+	Timestamp int64  `json:"timestamp"`
+	From      string `json:"from"`
+	To        string `json:"to"`
+	Value     int64  `json:"value"`
+}
+
+func main() {
+	// Connexion à la base de données
+	db, err := sql.Open("postgres", "user=thibaut password=mysecretpassword dbname=indexeur sslmode=disable")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// Effectuer la requête API sur Ethplorer
+	response, err := http.Get("https://api.ethplorer.io/getAddressTransactions/0x742d35Cc6634C0532925a3b844Bc454e4438f44e?apiKey=freekey")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	/*
+		// Décoder la réponse JSON
+		var transactions []Transaction
+		err = json.Unmarshal(body, &transactions)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Préparer la requête d'insertion des données dans la base de données
+		stmt, err := db.Prepare("INSERT INTO transactions (timestamp, from_address, to_address, value) VALUES ($1, $2, $3, $4)")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer stmt.Close()
+
+		// Insérer les données dans la base de données
+		for _, transaction := range transactions {
+			_, err = stmt.Exec(transaction.Timestamp, transaction.From, transaction.To, transaction.Value)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		fmt.Println("Données ajoutées avec succès à la base de données")
+	*/
+}

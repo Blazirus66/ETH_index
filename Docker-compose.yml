@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  db:
+    container_name: postgres
+    image: postgres
+    #La ligne suivante permet de démarrer le conteneur même si il y a des erreurs
+    restart: always
+    environment:
+      POSTGRES_USER: thibaut
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: indexeur
+    ports:
+      - "5432:5432"
+      
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@esgi.fr
+      PGADMIN_DEFAULT_PASSWORD: myadminpassword
+    #Le port 5050 est celui de la machine hote (Ce PC). Alors que le port 80 est celui du conteneur.
+    ports:
+      - "5050:80"
+    #Le volume permet de garder les données de la base de données même si le conteneur est supprimé.
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    #Le depends_on permet de dire que le conteneur pgadmin dépend du conteneur db. Donc il ne sera pas démarré tant que le conteneur db n'est pas démarré.
+    depends_on:
+      - db
+
+  hasura:
+    container_name: hasura
+    restart: always
+    image: hasura/graphql-engine
+    #L'environnement ont été trouvé sur dockerhub
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://thibaut:mysecretpassword@db:5432/indexeur
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    volumes:
+      - ./hasura:/var/lib/hasura
